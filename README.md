@@ -91,8 +91,6 @@ interface IOrderInfo {
 }
 ```
 
-## Базовые классы
-
 ### Класс EventEmitter 
 Реализует брокер событий, позволяя компонентам приложения обмениваться данными без прямой связи друг с другом. Этот подход улучшает модульность и изоляцию компонентов.
 Основные методы:
@@ -112,70 +110,101 @@ interface IOrderInfo {
 - setImage устанавливает источник изображения и альтернативный текст для элемента <img>.
 - render основной метод рендеринга. Передаёт данные в экземпляр компонента и возвращает корневой элемент container.
 
-## Слой данных
-
 ### Класс ProductModel
 Класс для работы с данными приложения. Отвечает за логику работы с данными типа IProduct.
 Класс:
 - protected items: IProduct[]; 
 - protected events: IEvents 
 
-- setProducts(items: IProduct[]): void 
-- getProducts(): items: IProduct[] 
-- getProduct(id: string): IProduct 
+- setProducts(items: IProduct[]): void - метод сохраняет данные товара 
+- getProducts(): items: IProduct[] -метод возвращает массив товаров
+- getProduct(id: string): IProduct - метод возвращает товар по его id
+
+### Класс Card 
+Класс для работы с карточками. Он является основой для других карточек
+- protected itemTitle: HTMLElement; - название товара
+- protected itemPrice: HTMLElement; - стоимость товара
+- protected itemButton: HTMLButtonElement; - кнопка добавления в корзину
+- set title(value: string) - устанавливаем название товара
+- set price(value: number) - устанавливаем стоимость товара
+
+### Класс CardCatalog
+Класс для работы с каталогом карточек, расширяет класс Card
+- protected itemImage: HTMLImageElement; - картинка товара
+- protected itemCategory: HTMLElement; - категория товара
+- set category(value: string) - устанавливаем категорию товара
+- set image(value: string) - устанавливаем картинку товара
+
+### Класс CardPreview
+Класс для работы с превью карточек, расширяет класс Card
+protected itemDescription: HTMLElement; - описание товара
+protected productId: string; - id продукта
+set description(value: string) - устанавливаем дописание товара
+set id(value: string) - устанавливаем id товара
+set valid(value: boolean) - проверяем валидность кнопки
+
+### Класс CardBasket
+private itemIndex: HTMLElement; - индекс товара в корзине
+set index(value: number) - устанавливаем индекс товара в корзине
 
 ### Класс Order 
-Класс для работы с заказом. Работает с типами данных IOrderInfo. Он отвечает за хранение информации о заказе, таких как платежные данные, адрес доставки, контактные данные клиента и список товаров, входящих в заказ. Класс также реализует функционал для добавления и удаления продуктов, получения списка товаров и расчета общей стоимости заказа. Этот класс не является наследником других классов.
+Класс для работы с отображением заказа
+- protected cashButton: HTMLButtonElement; - кнопка для оплаты наличкой
+- protected cardButton: HTMLButtonElement; - кнопка для оплаты картой
+- protected addressInput: HTMLInputElement; - поле для введения адреса
+- protected phoneInput: HTMLInputElement; - поле для введения телефона
+- protected emailInput: HTMLInputElement; - поле для введения электронной почты
+- set payment(value: string) - устанавлием класс для активной кнопки
+- get address() - получаем значение адреса
+- set address(value: string) - устанавливаем значение адреса
+- get phone() - получаем значение номера
+- set phone(value: string) - устанавливаем значением номера
+- get email() - поулчаем значение почты
+- set email(value: string) - устанавливаем значение почты
+- reset() - сбрасываем данные
 
-Конструктор класса принимает следующие параметры:
+### OrderData
+Класс для работы с данными заказа
+- protected orderInfo: IOrderInfo = {}; - объект с информацией о заказе
+- setOrderInfo(field: keyof IOrderInfo, value: string | number) - добавляем данные о заказе в объект
+- getOrderInfo() - получаем объект с данными
+- checkValidity(value: keyof IOrderInfo) - проверяем валидность данных
+- checkButton() - проверяем статус кнопки
+- reset() - сброс данных
 
-- payment: string: Строка, представляющая способ оплаты заказа.
-- address: string: Строка, указывающая адрес доставки.
-- email: string: Строка, содержащая электронную почту клиента.
-- phone: string: Строка с номером телефона клиента.
-- items: IProduct[]: Массив, состоящий из объектов, реализующих интерфейс IProduct, который представляет товары в заказе.
-- events: IEvents: Объект, реализующий интерфейс IEvents, который может использоваться для обработки событий, связанных с заказом.
+### Basket 
+Класс для работы с отображением корзины
+- protected itemsList: HTMLElement; - список товаров в корзине
+- protected buttonSubmit: HTMLButtonElement; - кнопка для оформления заказа
+- protected totalValue: HTMLElement; - стоимость заказа
+- set total(total: number) - устанавливаем стоимость заказа
+- set items(items: HTMLElement[]) - добавляем товары в корзину
+- checked(value: number) - проверка активности кнопки 
+- addProduct(item: HTMLElement) - обновляем список товаров
+- getItems() - получаем список товаров
 
-Класс: 
-- protected payment: string: Хранит способ оплаты заказа. Используется для идентификации, как клиент собирается оплатить заказ.
-  
-- protected address: string: Хранит адрес доставки для заказа. Это значение используется для доставки товаров клиенту.
-  
-- protected email: string: Хранит электронную почту клиента. Это может быть использовано для рассылки уведомлений о статусе заказа.
+### BasketData
+Класс для работы с данными в корзине
+- protected itemList: HTMLElement[]; - список товаров в DOM
+- protected itemsData: Pick<IProduct, 'title' | 'price' | 'id'>[]; - товары для добавления
+- protected totalPrice: number; - значение стоимости товаров
+- setItemsData(item: IProduct) - добавлем товар в список
+- getItemsData() - возвращаем список товаров
+- reserBasket() - сбрасываем корзину
+- addToBasket(item: HTMLElement) - добавляем товар в DOM список
+- getItemList() - возвращаем DOM список элементов
+- setTotalPrice(value: number) - устанавливаем значение стоимости корзины
+- getTotalPrice() - получаем значение стоимости корзины
+- deleteId(value: string) - удалеение товара по id
 
-- protected phone: string: Хранит номер телефона клиента. Это поле может потребоваться для связи с клиентом, если возникнут какие-либо вопросы по заказу.
 
-- protected items: IProduct[]: Хранит массив товаров, представляющих заказываемые продукты. Это поле отвечает за управление списком продуктов, входящих в заказ.
-
-- protected events: IEvents: Хранит объект для обработки событий, связанных с заказом. Это позволяет взаимодействовать с другими компонентами системы, реагируя на изменения в заказе.
-
-- addProduct(product: IProduct): void: Метод для добавления продукта в заказ. 
-    - Параметры: 
-      - product: IProduct: Объект, представляющий продукт, который нужно добавить в заказ.
-    - Возвращаемое значение: Метод ничего не возвращает.
-
-- deleteProduct(id: string): void: Метод для удаления продукта из заказа по его идентификатору.
-    - Параметры: 
-      - id: string: Идентификатор продукта, который нужно удалить из заказа.
-    - Возвращаемое значение: Метод ничего не возвращает.
-
-- getItems(): IProduct[]: Метод для получения списка товаров в заказе.
-    - Возвращаемое значение: Возвращает массив объектов, представляющих товары (IProduct[]), входящие в заказ.
-
-- getTotalPrice(): number: Метод для расчета общей стоимости продуктов в заказе.
-    - Возвращаемое значение: Возвращает значение общего количества по всем продуктам в заказе в виде числа (number).
-
-- getTotal(): number: Метод для получения итога заказа, количество позиций в заказе.
-    - Возвращаемое значение: Возвращает общее значение заказа в виде числа (number).
 
 ### Класс AppApi 
 Класс для работы с сервером. Расширяет класс Api.
 Класс:
 - getProducts(): Promise<IProduct[]> 
-- orderProducts(order: IOrderInfo) - отправка заказа на сервер
+- serOrder(order: IOrderInfo) - отправка заказа на сервер
 
-## Слой отображения
-Класс для отображения интерактивных элементов.
 
 ### Класс Component:
 Базовый класс, который является для всех классов отображения. Содержит метод render для перерисовывания элементов.
@@ -184,14 +213,19 @@ interface IOrderInfo {
 Класс для работы с модальными окнами. Использует методы open и close.
 
 - protected _content: HTMLElement - контент модального окна
+- protected _closeButton: HTMLButtonElement - кнопка закрытия
+- open(): - функция открытия модального окна
+- close(): - функция закрытия модального окна
 - set content(value: HTMLElement):void - сеттер для контента темплейта
 - render(data: HTMLElement): HTMLElement - рендер окна модели
 
 ### Класс Page 
 Класс отвечающий за отображение элементов на главной странице.
-- counter: HTMLElement
-- catalog: HTMLElement
-- basket: HTMLElement
+- protected gallery: HTMLElement - список товаров для отображения;
+- protected total: HTMLElement - счетчик товаров в корзине;
+- protected basketButton: HTMLButtonElement - кнопка корзины;
+- set cards(items: HTMLElement[]) - выводим список товаров в DOM
+- set totalValue(value: number) - устанавливаем количество товаров в DOM
 
 ### Класс Form 
 Управляет работой форм в приложении, контролирует состояние кнопки отправки и генерирует события при отправке данных. Конструктор принимает container с типом HTMLElement, в также объект events с типом IEvents.
@@ -205,11 +239,12 @@ interface IOrderInfo {
 - set errors(value: string) сеттер устанавливает текст ошибки
 - render() обновляет состояние формы, включая валидность, ошибки и значения полей.
 
-### Класс Contacts
-Управляет формой контактной информации, расширяя функциональность класса Form для работы с полями телефона и email. Конструктор принимает container с типом HTMLFormElement, представляющий корневой элемент формы, и events с типом IEvents для работы с событиями.
-Методы:
-- set phone(value: string) устанавливает значение поля телефона.
-- set email(value: string) устанавливает значение поля почты.
+### Класс Success
+Показывает окно с успешным совершением заказа.
+- protected _close: HTMLElement;
+- protected _total: HTMLElement; 
+
+- set total(value: number) - устанавливает количество списанных средств
 
 ## Презентер
 Взаимодействие осуществляется за счет событий генерируемых с помощью брокера событий и обработчиков этих событий, описанных в index.ts
