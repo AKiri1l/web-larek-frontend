@@ -1,4 +1,4 @@
-import { IOrderInfo, IProduct } from '../../types'
+import { IOrderInfo, IProduct, IServerResult } from '../../types'
 import {Api, ApiListResponse} from './api'
 
 export class AppApi extends Api {
@@ -8,9 +8,9 @@ export class AppApi extends Api {
         })
     }
 
-    serOrder(data: IOrderInfo){
+    serOrder(data: IOrderInfo): Promise<IServerResult>{
         return this.post('/order', data).then(
-            (data: {info: IOrderInfo, items: Pick<IProduct, 'title' | 'price' | 'id'>}) => data
+            (data: IServerResult) => data
         );
     }
 }

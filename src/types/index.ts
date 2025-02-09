@@ -22,6 +22,10 @@ export interface IOrderInfo {
     total?: number;
 }
 
+export interface IServerResult {
+    id: string;
+    total: number;
+}
 
 export const productCategories: { [key: string]: string } = {
     'софт-скил': 'card__category_soft',

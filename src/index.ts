@@ -8,8 +8,10 @@ import { Page } from './components/Page';
 import { API_URL } from './utils/constants';
 import { Modal } from './components/Modal';
 import { IProduct, IOrderInfo } from './types';
-import { Basket, BasketData } from './components/Basket';
-import { Order, OrderData } from './components/Order';
+import { Basket } from './components/Basket';
+import { BasketData } from './components/BasketData';
+import { Order, OrderContacts } from './components/Order';
+import { OrderData } from './components/OrderData';
 import { Success } from './components/Success';
 
 
@@ -29,13 +31,16 @@ const modal = new Modal(document.querySelector('.modal'), events);
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 const basketData = new BasketData();
 const order = new Order(cloneTemplate(orderTemplate), events);
-const contact = new Order(cloneTemplate(contactTemplate), events);
+const contact = new OrderContacts(cloneTemplate(contactTemplate), events);
 const orderData = new OrderData();
 const succes = new Success(cloneTemplate(successTemplate), events);
 
 api.getProducts()
     .then(data => {
         model.setProducts(data);
+    })
+    .catch(err => {
+        console.error(err);
     })
 
 events.on('items:changed', () => {
@@ -50,7 +55,8 @@ events.on('item:selected', (item: IProduct) => {
         events.emit('basket:add', item);
     }
     });
-    if(basketData.getItemsData().some(elem => elem.id == item.id) || item.title == 'Мамка-таймер'){
+    if(basketData.getItemsData().some(elem => elem.id == item.id) || item.price == null){
+
         card.valid = false
     }
     modal.render({
@@ -59,70 +65,83 @@ events.on('item:selected', (item: IProduct) => {
 })
 
 events.on('basket:add', (item: IProduct) => {
-    orderData.setOrderInfo('items', item.id);
     basketData.setItemsData(item);
-    page.totalValue = basketData.getItemsData().length;
-    basketData.setTotalPrice(item.price);
     modal.close();
+    events.emit('data:changed')
+    renderBasketModal()
 })
 
 const renderBasketModal = () => {
-    basketData.reserBasket();
-    basketData.getItemsData().forEach(item => {
-        const card = new CardBasket(cloneTemplate(cardBasketTempalte), {onClick: () => {
-            events.emit('basket:delete', item);
-        }
-        }).render({ title: item.title, price: item.price,index: basketData.getItemList().length + 1});
-        basketData.addToBasket(card);
-    })
-    modal.render({content: 
-        basket.render({
-            total: basketData.getTotalPrice(),
-            items: basketData.getItemList()
-        })
-})
+    basket.items = basketData.getItemsData().map((item,index) => {
+        return new CardBasket(cloneTemplate(cardBasketTempalte), {
+            onClick: () => {
+                events.emit('basket:delete', item);
+            }
+        }).render({ title: item.title, price: item.price, index: index + 1 });
+    });
+    basket.total = basketData.getTotalPrice();
 }
 
 events.on('basket:delete', (item: IProduct) => {
     basketData.deleteId(item.id);
-    basketData.setTotalPrice(-item.price);
-    page.totalValue = basketData.getItemsData().length;
     renderBasketModal()
     basket.checked(basketData.getTotalPrice())
+    events.emit('data:changed')
+})
+
+events.on('data:changed', () => {
+    page.totalValue = basketData.getItemsData().length;
+    order.payment = orderData.getOrderInfo().payment;
+    renderBasketModal()
 })
 
 events.on('basket:open', () => {
-    renderBasketModal()
+    modal.render({content: 
+        basket.render({
+            total: basketData.getTotalPrice(),
+        })
+    })
     basket.checked(basketData.getTotalPrice())
 })
 
 events.on("form:open", () => {
-    orderData.getOrderInfo().address = undefined;
+    orderData.setOrderItemsIds(basketData.getItemsIds());
+    orderData.resetContacts();
     orderData.setOrderInfo('total', basketData.getTotalPrice());
+    order.errors = orderData.checkValidity('payment');
     modal.render({
         content: order.render({
             valid: false,
-			errors: [],
+			errors: order.errors,
 			address: '',
 			payment: '',
         })
     })
 })
 
+events.on('modal:open', () => {
+    page.locked = true;
+  });
+    
+events.on('modal:close', () => {
+    page.locked = false;
+});
+    
 events.on('payment:change', (data: {name: string}) => {
     orderData.setOrderInfo('payment', data.name)
-    order.payment = orderData.getOrderInfo().payment;
+    order.errors = orderData.checkValidity('payment');
     order.valid = (order.errors == '') && (orderData.getOrderInfo().payment != undefined) && (orderData.getOrderInfo().address != undefined) ? true: false;
+    events.emit('data:changed')
 })
 
-events.on('input:change', (data: { field: keyof IOrderInfo; value: string}) => {
+events.on('input:change', (data: { field: Exclude<keyof IOrderInfo, 'items'>; value: string}) => {
         orderData.setOrderInfo(data.field, data.value);
         if(data.field == 'address'){
             order.errors = orderData.checkValidity(data.field);
             order.valid = (order.errors == '') && (orderData.getOrderInfo().payment != undefined) ? true: false;
         } else {
             contact.errors = orderData.checkValidity(data.field);
-            contact.valid = orderData.checkButton();
+            contact.valid = order.checkButton(orderData.getOrderInfo());
         }
 	}
 );
@@ -131,7 +150,7 @@ events.on('order:submit', () => {
     modal.render({
         content: contact.render({
             valid: false,
-			errors: [],
+			errors: '',
 			phone: '',
             email: '',
         })
@@ -140,18 +159,17 @@ events.on('order:submit', () => {
 
 events.on('contacts:submit', () => {
     api.serOrder(orderData.getOrderInfo())
-        .then(() => {
-            succes.total = basketData.getTotalPrice();
+        .then((data) => {
+            succes.total = data.total;
             modal.render({
                 content: succes.render({})
             })
-            basketData.reserBasket();
+            basketData.clearBasket();
             orderData.reset();
-            page.totalValue = 0;
+            events.emit('data:changed')
         })
 })
 
 events.on('order:success', () => {
     modal.close();
 })
-

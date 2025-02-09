@@ -21,6 +21,14 @@ export class Page extends Component<IPage>{
         this.basketButton.addEventListener('click', () => events.emit('basket:open'));
     }
 
+    set locked(value: boolean) {
+        if (value) {
+            this.container.classList.add('page__wrapper_locked');
+        } else {
+            this.container.classList.remove('page__wrapper_locked');
+        }
+    }
+
     set cards(items: HTMLElement[]){
         this.gallery.replaceChildren(...items);
     }

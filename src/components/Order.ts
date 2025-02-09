@@ -7,18 +7,13 @@ export class Order extends Form<IOrderInfo> {
 	protected cashButton: HTMLButtonElement;
 	protected cardButton: HTMLButtonElement;
     protected addressInput: HTMLInputElement;
-    protected phoneInput: HTMLInputElement;
-    protected emailInput: HTMLInputElement;
 
 	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
 
-        
-		this.cashButton = this.container.querySelectorAll('.button')[1] as HTMLButtonElement;
-		this.cardButton = this.container.querySelectorAll('.button')[0] as HTMLButtonElement;
+		this.cashButton = ensureElement('.button_alt[name = cash]',this.container) as HTMLButtonElement
+		this.cardButton = ensureElement('.button_alt[name = card]',this.container) as HTMLButtonElement
         this.addressInput = this.container.elements.namedItem('address') as HTMLInputElement;
-        this.phoneInput = this.container.elements.namedItem('phone') as HTMLInputElement;
-        this.emailInput = this.container.elements.namedItem('email') as HTMLInputElement;
 
 		if(this.cashButton && this.cardButton){
 			this.cashButton.addEventListener('click', (e: Event) => {
@@ -47,6 +42,24 @@ export class Order extends Form<IOrderInfo> {
 		this.addressInput.value = value;
 	}
 
+	reset() {
+		this.address = '';
+		this.payment = '';
+	}
+}
+
+export class OrderContacts extends Form<IOrderInfo> {
+    protected phoneInput: HTMLInputElement;
+    protected emailInput: HTMLInputElement;
+
+	constructor(container: HTMLFormElement, events: IEvents) {
+		super(container, events);
+
+        this.phoneInput = this.container.elements.namedItem('phone') as HTMLInputElement;
+        this.emailInput = this.container.elements.namedItem('email') as HTMLInputElement;
+
+		}
+
 	get phone(){
 		return this.phoneInput.value;
 	}
@@ -66,57 +79,5 @@ export class Order extends Form<IOrderInfo> {
 	reset() {
 		this.phone = '';
 		this.email = '';
-		this.address = '';
-		this.payment = '';
-	}
-}
-
-export class OrderData {
-	protected orderInfo: IOrderInfo = {};
-
-    constructor() {
-		this.orderInfo.items = [];
-	}
-
-	setOrderInfo(field: keyof IOrderInfo, value: string | number): void{
-		if(field == 'items'){
-			this.orderInfo.items.push(value.toString());
-		} else if (field == 'total') {
-            this.orderInfo[field] = value as number; 
-        } else {
-            this.orderInfo[field] = value as string;
-        }
-		console.log(this.getOrderInfo())
-	}
-
-	getOrderInfo() {
-		return this.orderInfo;
-	}
-
-	checkValidity(value: keyof IOrderInfo): string {
-		if(!this.orderInfo[value]){
-			switch(value) {
-				case 'address':
-					return 'Введите адрес'
-				case 'phone':
-				  return 'Введите номер телефона'
-				case 'email': 
-				  return 'Введите адрес электронной почты'
-				default:
-					return ''
-			  }
-		}
-		return '' 
-	}
-
-	checkButton() {
-		if(this.orderInfo.address && this.orderInfo.payment && this.orderInfo.email && this.orderInfo.phone){
-			return true
-		}
-		return false;
-	}
-
-	reset() {
-		this.orderInfo = {};
 	}
 }

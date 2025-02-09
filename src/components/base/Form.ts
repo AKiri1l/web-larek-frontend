@@ -5,7 +5,7 @@ import { IOrderInfo } from "../../types";
 
 interface IFormState {
     valid: boolean;
-    errors: string[];
+    errors: string;
 }
 
 export class Form<T> extends Component<IFormState> {
@@ -49,6 +49,14 @@ export class Form<T> extends Component<IFormState> {
     get errors() {
         return this._errors.textContent;
     }
+
+    checkButton(orderInfo: IOrderInfo) {
+        if(orderInfo.address && orderInfo.payment && orderInfo.email && orderInfo.phone){
+            return true
+        }
+        return false;
+    }
+
 
     render(state: Partial<T> & IFormState) {
         const {valid, errors, ...inputs} = state;
