@@ -1,14 +1,16 @@
 import { IProduct } from "../types";
+import { IEvents } from "./base/events";
 
 export class BasketData{
     protected itemsData: Pick<IProduct, 'title' | 'price' | 'id'>[];
 
-    constructor() {
+    constructor(protected events: IEvents) {
         this.itemsData = [];
     }
 
     setItemsData(item: IProduct){
         this.itemsData.push(item);
+        this.events.emit('basket:changed')
     }
 
     getItemsData(){
@@ -25,9 +27,11 @@ export class BasketData{
 
     deleteId(value: string){
         this.itemsData = this.itemsData.filter((item) => item.id != value);
+        this.events.emit('basket:changed')
     }
 
     clearBasket(){
-        this.itemsData = []
+        this.itemsData = [];
+        this.events.emit('basket:changed')
     }
 }

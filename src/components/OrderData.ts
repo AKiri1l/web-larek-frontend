@@ -1,24 +1,26 @@
 import { IOrderInfo } from "../types";
+import { IEvents } from "./base/events";
 
 export class OrderData {
     protected orderInfo: IOrderInfo = {};
 
-    constructor() {}
+    constructor(protected events: IEvents) {}
 
     resetContacts(){
-        this.orderInfo.address = undefined;
+        this.orderInfo.address = '';
         this.orderInfo.email = '';
-        this.orderInfo.payment = undefined;
+        this.orderInfo.payment = '';
         this.orderInfo.phone = '';
+    }
+
+    choosePayment(value: string){
+        this.orderInfo.payment = value;
+        this.events.emit('payment:set')
     }
 
     setOrderInfo<K extends Exclude<keyof IOrderInfo, 'items'>>(field: K, value: IOrderInfo[K]): void {
         this.orderInfo[field] = value;
-        console.log(this.getOrderInfo());
-    }
-
-    setOrderItemsIds(item: string[]){
-        this.orderInfo.items = item;
+        this.events.emit('order:change', {field})
     }
 
     getOrderInfo() {

@@ -23,11 +23,16 @@ export class Basket extends Component<IBasketData>{
         this.setText(this.totalValue, `${total} синапсов`);
     }
 
+    get total(){
+        return parseInt(this.totalValue.textContent);
+    }
+
     set items(items: HTMLElement[]){
         this.itemsList.replaceChildren(...items);
     }
 
     checked(value: number) {
+        console.log(value)
         if (value) {
 			this.setDisabled(this.buttonSubmit, false);
 		} else {
